@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   creationTimestamp: '2021-12-08T17:05:51Z'
-  generation: 15
+  generation: 17
   managedFields:
     - apiVersion: tekton.dev/v1beta1
       fieldsType: FieldsV1
@@ -19,7 +19,7 @@ metadata:
       time: '2021-12-08T17:05:51Z'
   name: animals-counter-pipeline
   namespace: pipeline-tutorial
-  resourceVersion: '2082934'
+  resourceVersion: '2186377'
   uid: b0c89ef5-043f-4782-84e8-7e436e2cfd75
 spec:
   params:
@@ -101,20 +101,32 @@ spec:
       workspaces:
         - name: source
           workspace: shared-workspace
-    - name: create-deployment
+    - name: openshift-client-deploy
       params:
-        - name: name
-          value: animals-counter-springboot
-        - name: IMAGE
+        - name: SCRIPT
           value: >-
+            oc new-app animals-counter
             image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/animals-counter
-        - name: IMAGE_TAG
+        - name: VERSION
           value: latest
       runAfter:
         - buildah
       taskRef:
-        kind: Task
-        name: create-deployment
+        kind: ClusterTask
+        name: openshift-client
+    - name: openshift-client-expose
+      params:
+        - name: SCRIPT
+          value: >-
+            oc expose service/animals-counter && oc expose
+            service/animals-counter-1
+        - name: VERSION
+          value: latest
+      runAfter:
+        - openshift-client-deploy
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
   workspaces:
     - name: shared-workspace
     - name: maven-settings
