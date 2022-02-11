@@ -1,26 +1,8 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  creationTimestamp: '2021-12-08T17:05:51Z'
-  generation: 17
-  managedFields:
-    - apiVersion: tekton.dev/v1beta1
-      fieldsType: FieldsV1
-      fieldsV1:
-        'f:spec':
-          .: {}
-          'f:finally': {}
-          'f:params': {}
-          'f:resources': {}
-          'f:tasks': {}
-          'f:workspaces': {}
-      manager: Mozilla
-      operation: Update
-      time: '2021-12-08T17:05:51Z'
   name: animals-counter-pipeline
   namespace: pipeline-tutorial
-  resourceVersion: '2186377'
-  uid: b0c89ef5-043f-4782-84e8-7e436e2cfd75
 spec:
   params:
     - default: latest
@@ -61,6 +43,7 @@ spec:
           value:
             - package
             - '-Dmaven.test.skip'
+            - deploy
         - name: PROXY_PROTOCOL
           value: http
         - name: CONTEXT_DIR
@@ -85,8 +68,6 @@ spec:
             registry.redhat.io/rhel8/buildah@sha256:99cae35f40c7ec050fed3765b2b27e0b8bbea2aa2da7c16408e2ca13c60ff8ee
         - name: STORAGE_DRIVER
           value: vfs
-        - name: DOCKERFILE
-          value: ./Dockerfile
         - name: CONTEXT
           value: .
         - name: TLSVERIFY
