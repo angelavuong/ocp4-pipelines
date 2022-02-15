@@ -1,3 +1,23 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-animals-counter
+  namespace: pipeline-tutorial
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: gp2
+  volumeMode: Filesystem
+status:
+  phase: Bound
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
