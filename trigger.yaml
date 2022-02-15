@@ -1,0 +1,99 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: trigger-template-animals-counter-pipeline
+  namespace: pipeline-tutorial
+spec:
+  params:
+    - name: git-revision
+    - name: git-commit-message
+    - name: git-repo-url
+    - name: git-repo-name
+    - name: content-type
+    - name: pusher-name
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        annotations: {}
+        generateName: animals-counter-pipeline-
+        labels:
+          tekton.dev/pipeline: animals-counter-pipeline
+        namespace: pipeline-tutorial
+      spec:
+        params:
+          - name: IMAGE_TAG
+            value: latest
+        pipelineRef:
+          name: animals-counter-pipeline
+        resources: []
+        status: null
+        workspaces:
+          - name: shared-workspace
+            persistentVolumeClaim:
+              claimName: pvc-animals-counter
+          - configMap:
+              name: custom-maven-settings
+            name: maven-settings
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: event-listener-animals-counter
+  namespace: pipeline-tutorial
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - bindings:
+        - kind: ClusterTriggerBinding
+          ref: github-push
+      template:
+        ref: trigger-template-animals-counter-pipeline
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: el-event-listener
+  namespace: pipeline-tutorial
+  labels:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: event-listener-animals-counter
+  ownerReferences:
+    - apiVersion: triggers.tekton.dev/v1alpha1
+      kind: EventListener
+      name: event-listener-animals-counter
+      controller: true
+      blockOwnerDeletion: true
+spec:
+  ports:
+    - name: http-listener
+      protocol: TCP
+      port: 8080
+      targetPort: 8000
+  selector:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: event-listener-animals-counter
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: el-event-listener
+  namespace: pipeline-tutorial
+  labels:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: event-listener-animals-counter
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  to:
+    kind: Service
+    name: el-event-listener
+    weight: 100
+  port:
+    targetPort: 8000
+  wildcardPolicy: None
+
+
