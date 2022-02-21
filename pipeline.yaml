@@ -1,3 +1,11 @@
+kind: Project
+apiVersion: project.openshift.io/v1
+metadata:
+  name: pipeline-tutorial
+spec:
+  finalizers:
+    - kubernetes
+---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
