@@ -1,0 +1,93 @@
+apiVersion: sonatype.com/v1alpha1
+kind: NexusRepo
+metadata:
+  name: nexusrepo
+  namespace: openshift-operators
+spec:
+  config:
+    data: null
+    enabled: false
+    mountPath: /sonatype-nexus-conf
+  deployment:
+    additionalContainers: null
+    additionalVolumeMounts: null
+    additionalVolumes: null
+    annotations: {}
+    initContainers: null
+    postStart:
+      command: null
+    preStart:
+      command: null
+    terminationGracePeriodSeconds: 120
+  route:
+    annotations: null
+    enabled: false
+    labels: null
+    name: docker
+    portName: docker
+  secret:
+    data: null
+    enabled: false
+    mountPath: /etc/secret-volume
+    readOnly: true
+  ingress:
+    annotations: {}
+    enabled: false
+    path: /
+    rules: null
+    tls:
+      enabled: true
+      secretName: nexus-tls
+  service:
+    annotations: {}
+    enabled: false
+    labels: {}
+    ports:
+      - name: nexus-service
+        port: 80
+        targetPort: 80
+  statefulset:
+    enabled: false
+  replicaCount: 1
+  deploymentStrategy: {}
+  nexusProxyRoute:
+    annotations: null
+    enabled: false
+    labels: null
+  tolerations: []
+  persistence:
+    accessMode: ReadWriteOnce
+    enabled: true
+    storageSize: 8Gi
+  nexus:
+    nexusPort: 8081
+    dockerPort: 5003
+    readinessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 30
+      path: /
+      periodSeconds: 30
+    livenessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 30
+      path: /
+      periodSeconds: 30
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: nexus
+  namespace: openshift-operators
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  to:
+    kind: Service
+    name: nexusrepo-sonatype-nexus-service
+    weight: 100
+  port:
+    targetPort: application
+  wildcardPolicy: None
+
